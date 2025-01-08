@@ -1,0 +1,6 @@
+name: azure-cosmosdb-base
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: Base project for creating a CosmosDB container through a Azure's Cosmos SDK 

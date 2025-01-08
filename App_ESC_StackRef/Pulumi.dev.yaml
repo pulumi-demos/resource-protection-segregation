@@ -1,0 +1,6 @@
+environment:
+  ## This environment abstracts the base stack reference and provides the values as standard config
+  ## See the readme for how to create the environment in Pulumi Cloud.
+  - cosmosdb-infra/base
+config:
+  azure-native:location: CentralUS

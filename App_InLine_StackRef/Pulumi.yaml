@@ -1,0 +1,6 @@
+name: azure-cosmosdb-app-inline-stackref
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: App project for deploying a Logic App and an API Connection that leverages a CosmosDB deployed by another base infrastructure stack.

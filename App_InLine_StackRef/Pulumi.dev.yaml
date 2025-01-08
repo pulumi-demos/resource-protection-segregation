@@ -1,0 +1,9 @@
+config:
+  azure-native:location: CentralUS
+  ## Commented out this line so users will be prompted to enter the base project name.
+  ## Since this is one of the downsides of the inline stack reference approach - there is bookkeeping 
+  ## of populating the base project name in the config file, plus the fact that program actually has to know about the
+  ## base project and it's outputs.
+  ## This is different than the ESC based approach where the program just sees config values and doesn't have to know
+  ## about the base project.
+  baseProjectName: azure-cosmosdb-base
