@@ -1,18 +1,10 @@
-# Copyright 2016-2021, Pulumi Corporation.  All rights reserved.
-
 import pulumi
 import pulumi_azure_native.authorization as authorization
 import pulumi_azure_native.documentdb as documentdb
 import pulumi_azure_native.logic as logic
 import pulumi_azure_native.web as web
 
-## uncomment this line to use inline stack reference
 import config
-
-
-
-
-### Now deploy the app using the outputs from the referenced stack
 
 account_keys = documentdb.list_database_account_keys_output(
     account_name=config.cosmosdb_account_name,

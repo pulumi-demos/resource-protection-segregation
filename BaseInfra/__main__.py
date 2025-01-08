@@ -1,12 +1,28 @@
-# Copyright 2016-2021, Pulumi Corporation.  All rights reserved.
-
 import pulumi
 import pulumi_azure_native.documentdb as documentdb
 import pulumi_azure_native.resources as resources
 import pulumi_azure_native.storage as storage
 
+config = pulumi.Config()
+protect_flag = config.get_bool("protect_flag") or True
+
 # Create an Azure Resource Group
-resource_group = resources.ResourceGroup("resourceGroup")
+# EXPLICITLY set the protect resource option to show what it looks like.
+resource_group = resources.ResourceGroup("resourceGroup",
+                                         opts=pulumi.ResourceOptions(protect=protect_flag))
+
+
+# Use a stack transform to set the protect flag for the rest of the stack.
+# Normally, this would be at the top of the file before any resources are created.
+# But in the interest of showing the individual protect flag, we're doing it here.
+# So registering this transform will apply the protect flag to all resources created after this point.
+def transform(args: pulumi.ResourceTransformArgs):
+        return pulumi.ResourceTransformResult(
+            props=args.props,
+            opts=pulumi.ResourceOptions.merge(args.opts, pulumi.ResourceOptions(
+                protect=protect_flag,
+            )))
+pulumi.runtime.register_resource_transform(transform)
 
 # Create an Azure resource (Storage Account)
 storage_account = storage.StorageAccount(
@@ -59,99 +75,3 @@ pulumi.export("resource_group_name", resource_group.name)
 pulumi.export("resource_group_location", resource_group.location)
 pulumi.export("db_name", db.name)
 pulumi.export("db_container_name", db_container.name) 
-
-# #####
-
-# account_keys = documentdb.list_database_account_keys_output(
-#     account_name=cosmosdb_account.name,
-#     resource_group_name=resource_group.name)
-
-# client_config = pulumi.Output.from_input(authorization.get_client_config())
-
-# api_id = pulumi.Output.concat(
-#     "/subscriptions/", client_config.subscription_id,
-#     "/providers/Microsoft.Web/locations/", resource_group.location,
-#     "/managedApis/documentdb")
-
-# # API Connection to be used in a Logic App
-# connection = web.Connection(
-#     "connection",
-#     resource_group_name=resource_group.name,
-#     properties=web.ApiConnectionDefinitionPropertiesArgs(
-#         display_name="cosmosdb_connection",
-#         api=web.ApiReferenceArgs(
-#             id=api_id,
-#         ),
-#         parameter_values={
-#             "databaseAccount": cosmosdb_account.name,
-#             "accessKey": account_keys.primary_master_key,
-#         },
-#     ))
-
-# # Logic App with an HTTP trigger and Cosmos DB action
-# workflow = logic.Workflow(
-#     "workflow",
-#     resource_group_name=resource_group.name,
-#     definition={
-#         "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-#         "contentVersion": "1.0.0.0",
-#         "parameters": {
-#             "$connections": {
-#                 "defaultValue": {},
-#                 "type": "Object",
-#             },
-#         },
-#         "triggers": {
-#             "Receive_post": {
-#                 "type": "Request",
-#                 "kind": "Http",
-#                 "inputs": {
-#                     "method": "POST",
-#                     "schema": {
-#                         "properties": {},
-#                         "type": "object",
-#                     },
-#                 },
-#             },
-#         },
-#         "actions": {
-#             "write_body": {
-#                 "type": "ApiConnection",
-#                 "inputs": {
-#                     "body": {
-#                         "data": "@triggerBody()",
-#                         "id": "@utcNow()",
-#                     },
-#                     "host": {
-#                         "connection": {
-#                             "name": "@parameters('$connections')['documentdb']['connectionId']",
-#                         },
-#                     },
-#                     "method": "post",
-#                     "path": pulumi.Output.all(db.name, db_container.name).apply(
-#                         lambda arg: f"/dbs/{arg[0]}/colls/{arg[1]}/docs"),
-#                 },
-#             },
-#         },
-#     },
-#     parameters={
-#         "$connections": logic.WorkflowParameterArgs(
-#             value={
-#                 "documentdb": {
-#                     "connectionId": connection.id,
-#                     "connection_name": "logicapp-cosmosdb-connection",
-#                     "id": api_id,
-#                 },
-#             },
-#         ),
-#     })
-
-
-# callback_urls = logic.list_workflow_trigger_callback_url_output(
-#     resource_group_name=resource_group.name,
-#     workflow_name=workflow.name,
-#     trigger_name="Receive_post")
-
-
-# # Export the HTTP endpoint
-# pulumi.export("endpoint", callback_urls.value)
